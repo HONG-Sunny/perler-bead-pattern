@@ -1,49 +1,81 @@
-// index.js
-const defaultAvatarUrl = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0'
+const convert = require('../../utils/convert.js')
+
+const app = getApp()
 
 Page({
   data: {
-    motto: 'Hello World',
-    userInfo: {
-      avatarUrl: defaultAvatarUrl,
-      nickName: '',
-    },
-    hasUserInfo: false,
-    canIUseGetUserProfile: wx.canIUse('getUserProfile'),
-    canIUseNicknameComp: wx.canIUse('input.type.nickname'),
+    imgPath: '',        // 选中的图片本地路径
+    imgW: 0,
+    imgH: 0,
+    gridW: 48,          // 横向豆子数
+    gridH: 0,           // 纵向豆子数（按原图比例算）
+    beadTotal: 0,       // 预估总豆数
+    converting: false
   },
-  bindViewTap() {
-    wx.navigateTo({
-      url: '../logs/logs'
-    })
-  },
-  onChooseAvatar(e) {
-    const { avatarUrl } = e.detail
-    const { nickName } = this.data.userInfo
-    this.setData({
-      "userInfo.avatarUrl": avatarUrl,
-      hasUserInfo: nickName && avatarUrl && avatarUrl !== defaultAvatarUrl,
-    })
-  },
-  onInputChange(e) {
-    const nickName = e.detail.value
-    const { avatarUrl } = this.data.userInfo
-    this.setData({
-      "userInfo.nickName": nickName,
-      hasUserInfo: nickName && avatarUrl && avatarUrl !== defaultAvatarUrl,
-    })
-  },
-  getUserProfile(e) {
-    // 推荐使用wx.getUserProfile获取用户信息，开发者每次通过该接口获取用户个人信息均需用户确认，开发者妥善保管用户快速填写的头像昵称，避免重复弹窗
-    wx.getUserProfile({
-      desc: '展示用户信息', // 声明获取用户个人信息后的用途，后续会展示在弹窗中，请谨慎填写
-      success: (res) => {
-        console.log(res)
-        this.setData({
-          userInfo: res.userInfo,
-          hasUserInfo: true
+
+  /** 选图：相册或拍照，jpg / png 都走这里 */
+  chooseImage() {
+    const that = this
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sizeType: ['original', 'compressed'],
+      sourceType: ['album', 'camera'],
+      success(res) {
+        const file = res.tempFiles[0]
+        wx.getImageInfo({
+          src: file.tempFilePath,
+          success(info) {
+            that.setData({
+              imgPath: file.tempFilePath,
+              imgW: info.width,
+              imgH: info.height
+            }, that.updateGridSize)
+          },
+          fail() {
+            wx.showToast({ title: '这张图读不了，换一张', icon: 'none' })
+          }
         })
       }
     })
   },
+
+  onGridChange(e) {
+    this.setData({ gridW: e.detail.value }, this.updateGridSize)
+  },
+
+  /** 纵向豆数按原图宽高比推算 */
+  updateGridSize() {
+    const { imgW, imgH, gridW } = this.data
+    if (!imgW || !imgH) return
+    const gridH = Math.max(1, Math.round(gridW * imgH / imgW))
+    this.setData({ gridH, beadTotal: gridW * gridH })
+  },
+
+  generate() {
+    const that = this
+    const { imgPath, gridW } = this.data
+    if (!imgPath) {
+      wx.showToast({ title: '先选一张图片', icon: 'none' })
+      return
+    }
+    this.setData({ converting: true })
+    wx.showLoading({ title: '正在配色…', mask: true })
+
+    convert.convert(imgPath, gridW).then(function (pattern) {
+      app.globalData.pattern = pattern
+      app.globalData.sourceImage = imgPath
+      wx.hideLoading()
+      that.setData({ converting: false })
+      wx.navigateTo({ url: '/pages/result/result' })
+    }).catch(function (err) {
+      wx.hideLoading()
+      that.setData({ converting: false })
+      wx.showModal({
+        title: '转换失败',
+        content: (err && err.message) || '未知错误',
+        showCancel: false
+      })
+    })
+  }
 })

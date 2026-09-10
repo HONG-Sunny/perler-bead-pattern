@@ -1,27 +1,53 @@
-<!--index.wxml-->
-<scroll-view class="scrollarea" scroll-y type="list">
-  <view class="container">
-    <view class="userinfo">
-      <block wx:if="{{canIUseNicknameComp && !hasUserInfo}}">
-        <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-          <image class="avatar" src="{{userInfo.avatarUrl}}"></image>
-        </button>
-        <view class="nickname-wrapper">
-          <text class="nickname-label">昵称</text>
-          <input type="nickname" class="nickname-input" placeholder="请输入昵称" bind:change="onInputChange" />
-        </view>
-      </block>
-      <block wx:elif="{{!hasUserInfo}}">
-        <button wx:if="{{canIUseGetUserProfile}}" bindtap="getUserProfile"> 获取头像昵称 </button>
-        <view wx:else> 请使用2.10.4及以上版本基础库 </view>
-      </block>
-      <block wx:else>
-        <image bindtap="bindViewTap" class="userinfo-avatar" src="{{userInfo.avatarUrl}}" mode="cover"></image>
-        <text class="userinfo-nickname">{{userInfo.nickName}}</text>
-      </block>
+<view class="page">
+
+  <!-- 上传区 -->
+  <view class="card">
+    <view class="card-title">1. 选择图片</view>
+
+    <view wx:if="{{!imgPath}}" class="dropzone" bindtap="chooseImage">
+      <view class="dropzone-plus">＋</view>
+      <view class="dropzone-text">点击选择图片</view>
+      <view class="dropzone-hint">支持 JPG / PNG，方形图效果最好</view>
     </view>
-    <view class="usermotto">
-      <text class="user-motto">{{motto}}</text>
+
+    <view wx:else class="preview">
+      <image class="preview-img" src="{{imgPath}}" mode="aspectFit" bindtap="chooseImage" />
+      <view class="preview-meta">
+        <text>原图 {{imgW}} × {{imgH}} px</text>
+        <text class="link" bindtap="chooseImage">重新选择</text>
+      </view>
     </view>
   </view>
-</scroll-view>
+
+  <!-- 参数区 -->
+  <view class="card" wx:if="{{imgPath}}">
+    <view class="card-title">2. 图纸尺寸</view>
+
+    <view class="size-row">
+      <text class="size-big">{{gridW}} × {{gridH}}</text>
+      <text class="size-unit">颗</text>
+    </view>
+    <view class="size-sub">共约 {{beadTotal}} 颗豆子 · 纵向按原图比例自动计算</view>
+
+    <slider
+      min="20" max="100" step="1" value="{{gridW}}"
+      block-size="22" activeColor="#e2487c" backgroundColor="#e6e6ea"
+      bindchanging="onGridChange" bindchange="onGridChange" />
+    <view class="slider-scale">
+      <text>20 粗糙</text>
+      <text>100 精细</text>
+    </view>
+  </view>
+
+  <!-- 生成 -->
+  <view class="footer" wx:if="{{imgPath}}">
+    <button class="btn-primary" loading="{{converting}}" disabled="{{converting}}" bindtap="generate">
+      生成拼豆图纸
+    </button>
+  </view>
+
+  <view class="tip" wx:if="{{!imgPath}}">
+    图片会在手机本地完成转换，不会上传到任何服务器。
+  </view>
+
+</view>
