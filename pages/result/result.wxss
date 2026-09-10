@@ -90,10 +90,13 @@
 .footer {
   position: fixed;
   left: 0; right: 0; bottom: 0;
+  display: flex;
+  gap: 20rpx;
   padding: 20rpx 24rpx calc(20rpx + constant(safe-area-inset-bottom));
   padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
   background: rgba(245, 246, 248, 0.94);
 }
+.footer button { margin: 0; flex: 1; }
 .btn-ghost {
   background: #fff;
   color: #e2487c;
@@ -102,4 +105,21 @@
   border-radius: 999rpx;
   line-height: 90rpx;
   height: 92rpx;
+}
+.btn-primary {
+  background: #e2487c;
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 500;
+  border-radius: 999rpx;
+  line-height: 92rpx;
+  height: 92rpx;
+}
+.btn-primary[disabled] { background: #e9a9c1; color: #fff; }
+
+/* 导出画布：不能 display:none，否则拿不到节点，挪到屏幕外即可 */
+.export-canvas {
+  position: fixed;
+  left: -99999px;
+  top: 0;
 }

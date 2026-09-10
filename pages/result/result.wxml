@@ -40,6 +40,11 @@
 
   <view class="footer">
     <button class="btn-ghost" bindtap="back">换张图片</button>
+    <button class="btn-primary" loading="{{saving}}" disabled="{{saving}}" bindtap="saveToAlbum">保存到相册</button>
   </view>
+
+  <!-- 导出用的高清画布，藏在屏幕外 -->
+  <canvas type="2d" id="exportCanvas" class="export-canvas"
+          style="width:{{exportW}}px;height:{{exportH}}px"></canvas>
 
 </view>
